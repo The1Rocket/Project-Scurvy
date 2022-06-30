@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class UnitSelection : MonoBehaviour
 {
     List<ShipInteractable> selectedShips = new List<ShipInteractable>();
     [SerializeField] string playerShipTag;
     bool isAdding;
-    bool isDragging;
+
+    [SerializeField] UnityEvent deselectFleetCard;
 
     Camera cam;
     [SerializeField] RectTransform selectionBoxVisual;
@@ -28,6 +30,7 @@ public class UnitSelection : MonoBehaviour
 
     private void Update()
     {
+        //NOTE: When shift is pressed ships that have not been added to the selectedShips can be added to the existing list
         if (Input.GetKeyDown(KeyCode.LeftShift))
         {
             isAdding = true;
@@ -37,6 +40,7 @@ public class UnitSelection : MonoBehaviour
         {
             startPos = Input.mousePosition;
             selectionBox = new Rect();
+            deselectFleetCard?.Invoke();
         }
 
         if (Input.GetMouseButton(0))
@@ -59,29 +63,24 @@ public class UnitSelection : MonoBehaviour
             {
                 if (hit.transform.gameObject.tag != playerShipTag && !isAdding)
                 {
-                    Debug.Log("Condition 1");
                     DeselectAllShips();
                 }
-                else if(hit.transform.gameObject.tag == playerShipTag && isAdding)
+                else if (hit.transform.gameObject.tag == playerShipTag && isAdding)
                 {
-                    Debug.Log("Condition 2");
-                    selectedShips.Add(hit.transform.GetComponent<ShipInteractable>());
-                    selectedShips[selectedShips.Count - 1].EnableSelectionRing();
+                    AddShipsToSelected(hit.transform.GetComponent<ShipInteractable>());
                 }
-                else if(hit.transform.gameObject.tag == playerShipTag)
+                else if (hit.transform.gameObject.tag == playerShipTag)
                 {
-                    Debug.Log("Condition 4");
                     selectedShips.Add(hit.transform.GetComponent<ShipInteractable>());
                     selectedShips[selectedShips.Count - 1].EnableSelectionRing();
                 }
                 else if (!isAdding)
                 {
-                    Debug.Log("Condition 3");
                     DeselectAllShips();
                 }
             }
 
-            SelectUnits();
+            SelectUnitsFromBox();
             startPos = Vector2.zero;
             endPos = Vector2.zero;
             DrawOnCanvas();
@@ -93,6 +92,7 @@ public class UnitSelection : MonoBehaviour
         }
     }
 
+    //NOTE: Draws the rectangle of the unit selection
     public void DrawOnCanvas()
     {
         Vector2 boxStart = startPos;
@@ -106,6 +106,7 @@ public class UnitSelection : MonoBehaviour
         selectionBoxVisual.sizeDelta = boxSize;
     }
 
+    //NOTE: Pain
     private void DrawSelection()
     {
         if (Input.mousePosition.x < startPos.x)
@@ -131,7 +132,8 @@ public class UnitSelection : MonoBehaviour
         }
     }
 
-    private void SelectUnits()
+    //Checks the box which ships are inside of it and adds them to the selectedShips
+    private void SelectUnitsFromBox()
     {
         foreach (ShipInteractable ship in ShipList.instance.playerShips)
         {
@@ -146,6 +148,37 @@ public class UnitSelection : MonoBehaviour
         }
     }
 
+    public void OverrideCurrentSelection(List<ShipInteractable> ships)
+    {
+        DeselectAllShips();
+        AddShipsToSelected(ships.ToArray());
+    }
+
+    public void AddShipsToSelected(params ShipInteractable[] ships)
+    {
+        foreach (ShipInteractable ship in ships)
+        {
+            if (!selectedShips.Contains(ship))
+            {
+                selectedShips.Add(ship);
+                selectedShips[selectedShips.Count - 1].EnableSelectionRing();
+            }
+            else
+            {
+                RemoveShipsFromSelected(ship);
+            }
+        }
+    }
+
+    public void RemoveShipsFromSelected(params ShipInteractable[] ships)
+    {
+        foreach (ShipInteractable ship in ships)
+        {
+            ship.DisableSelectionRing();
+            selectedShips.Remove(ship);
+        }
+    }
+
     public void DeselectAllShips()
     {
         foreach (ShipInteractable ship in selectedShips)
@@ -153,5 +186,10 @@ public class UnitSelection : MonoBehaviour
             ship.DisableSelectionRing();
         }
         selectedShips.Clear();
+    }
+
+    public List<ShipInteractable> GetSelectedShips()
+    {
+        return selectedShips;
     }
 }
