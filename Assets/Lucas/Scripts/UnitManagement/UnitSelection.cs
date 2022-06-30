@@ -1,15 +1,11 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
 
 public class UnitSelection : MonoBehaviour
 {
     List<ShipInteractable> selectedShips = new List<ShipInteractable>();
     [SerializeField] string playerShipTag;
     bool isAdding;
-
-    [SerializeField] UnityEvent deselectFleetCard;
 
     Camera cam;
     [SerializeField] RectTransform selectionBoxVisual;
@@ -40,7 +36,8 @@ public class UnitSelection : MonoBehaviour
         {
             startPos = Input.mousePosition;
             selectionBox = new Rect();
-            deselectFleetCard?.Invoke();
+            //NOTE: This is inefficient, pls fix
+            GameObject.Find("FleetManager").GetComponent<FleetManager>().MoveDownFleetCard();
         }
 
         if (Input.GetMouseButton(0))
@@ -191,5 +188,15 @@ public class UnitSelection : MonoBehaviour
     public List<ShipInteractable> GetSelectedShips()
     {
         return selectedShips;
+    }
+
+    public List<ShipInteractable> GetSelectedShipsFromTotalShips()
+    {
+        List<ShipInteractable> listToReturn = new List<ShipInteractable>();
+        foreach (ShipInteractable ship in selectedShips)
+        {
+            listToReturn.Add(ShipList.instance.playerShips[ShipList.instance.playerShips.IndexOf(ship)]);
+        }
+        return listToReturn;
     }
 }

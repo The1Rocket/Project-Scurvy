@@ -5,6 +5,7 @@ using UnityEngine;
 public class FleetCard : MonoBehaviour
 {
     [SerializeField] RectTransform fleetUICard;
+    private IEnumerator currRoutine;
 
     public void MoveCardUpInterpreter()
     {
@@ -18,14 +19,15 @@ public class FleetCard : MonoBehaviour
 
     public IEnumerator MoveCardUp()
     {
-        yield return new WaitForSeconds(1);
         //-400 to -480
         float waitTime = .3f;
         float elapsedTime = 0;
 
+        float startPosY = fleetUICard.anchoredPosition.y;
+
         while (elapsedTime < waitTime)
         {
-            fleetUICard.anchoredPosition = new Vector2(fleetUICard.anchoredPosition.x, Mathf.Lerp(-495, -400, (elapsedTime / waitTime)));
+            fleetUICard.anchoredPosition = new Vector2(fleetUICard.anchoredPosition.x, Mathf.Lerp(startPosY, -400, (elapsedTime / waitTime)));
             elapsedTime += Time.deltaTime;
 
             yield return null;
@@ -39,9 +41,11 @@ public class FleetCard : MonoBehaviour
         float waitTime = .3f;
         float elapsedTime = 0;
 
+        float startPosY = fleetUICard.anchoredPosition.y;
+
         while (elapsedTime < waitTime)
         {
-            fleetUICard.anchoredPosition = new Vector2(fleetUICard.anchoredPosition.x, Mathf.Lerp(-400, -495, (elapsedTime / waitTime)));
+            fleetUICard.anchoredPosition = new Vector2(fleetUICard.anchoredPosition.x, Mathf.Lerp(startPosY, -495, (elapsedTime / waitTime)));
             elapsedTime += Time.deltaTime;
 
             yield return null;
